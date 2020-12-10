@@ -18,16 +18,9 @@ struct Ray
   Vec3f mStrength;
 };
 
-struct Intersect
-{
-  float distance_from_origin;
-  Vec3f intersection_coordinates;
-  Vec3f incidence_vector;
-};
-
 class Object;
 class Light;
-
+class Intersect;
 class Shape
 {
 public:
@@ -36,6 +29,13 @@ public:
                                   const std::vector<Object> &inObj,
                                   const std::vector<Light> &inLight) const = 0;
   virtual ~Shape() {}
+};
+
+struct Intersect
+{
+  float distance_from_origin;
+  Vec3f intersection_coordinates;
+  Vec3f incidence_vector;
 };
 
 struct Object
@@ -49,6 +49,20 @@ struct Light
   Vec3f position;
   Vec3f power;
 };
+
+std::optional<std::pair<Intersect, const Object *>> cast_ray(const Ray &r, const std::vector<Object> &inObj)
+{
+  std::optional<std::pair<Intersect, const Object *>> first_intersect;
+  for (const auto &obj : inObj)
+  {
+    if (auto val = obj.shape->ray_intersect(r))
+    {
+      if (!first_intersect || first_intersect->first.distance_from_origin > val->distance_from_origin)
+        first_intersect = {*val, &obj};
+    }
+  }
+  return first_intersect;
+}
 
 class Sphere : public Shape
 {
@@ -81,21 +95,27 @@ public:
 
 #include <cstdio>
 
-  Vec3f get_diffuse_light(const Vec3f &coordinates,
+  static constexpr float epsilon = 0.001f;
+
+  Vec3f get_diffuse_light(const Vec3f &obj_isect_coord,
                           const std::vector<Object> &inObj,
                           const std::vector<Light> &inLight) const override
   {
     Vec3f ret_light{0, 0, 0};
-    (void)inObj; // for shadows
-    for (const auto &el : inLight)
+    for (const auto &light : inLight)
     {
-      Vec3f normal = (mCenter - coordinates).normalize();
-      Vec3f incident = (coordinates - el.position);
-      // printf("n%f,%f,%f\n", normal[0], normal[1], normal[2]);
-      // printf("i%f,%f,%f\n", incident[0], incident[1], incident[2]);
+      Vec3f incident = (obj_isect_coord - light.position);
+      Ray light_ray{light.position, incident / incident.norm()};
+
+      auto first_intersect = cast_ray(light_ray, inObj);
+      if ((first_intersect->first.intersection_coordinates - obj_isect_coord).norm_inf() > epsilon)
+        continue;
+
+      Vec3f normal = (mCenter - obj_isect_coord).normalize();
+
       float coeff = std::pow(normal.dot(incident / incident.norm()), 2.f);
       if (coeff > 0)
-        ret_light += el.power / (incident.norm() * incident.norm()) * coeff;
+        ret_light += light.power / (incident.norm() * incident.norm()) * coeff;
     }
     return ret_light;
   }
@@ -112,8 +132,8 @@ public:
                    const Vec3f &direction,
                    const float &focal_length,
                    const float &rotation,
-                   const Vec<2, float> &sensor_size,
-                   const Vec<2, std::size_t> &sensor_resolution)
+                   const Vector<2, float> &sensor_size,
+                   const Vector<2, std::size_t> &sensor_resolution)
       : mPosition{position},
         mDirection{direction / direction.norm()},
         mFocal{focal_length},
@@ -123,24 +143,19 @@ public:
 
   void render(Vec3f *outFrame, const std::vector<Object> &inObj, const std::vector<Light> &inLight)
   {
-    (void)inLight;
     std::vector<std::pair<Intersect, const Object *>> opt;
     for (std::size_t i = 0; i < mSensorRes[1]; ++i)
     {
       for (std::size_t j = 0; j < mSensorRes[0]; ++j)
       {
         Vec3f px_pos{mSensorSize[0] * (j - mSensorRes[0] / 2.f) / mSensorRes[0], mSensorSize[1] * (i - mSensorRes[1] / 2.f) / mSensorRes[1], mFocal};
+        px_pos += mPosition;
         Ray r{mPosition, px_pos - mPosition};
-        for (const auto &el : inObj)
-          if (auto val = el.shape->ray_intersect(r))
-            opt.push_back(std::pair<Intersect, const Object *>{val.value(), &el});
-        if (opt.size())
+        auto first_intersect = cast_ray(r, inObj);
+        if (first_intersect)
         {
-          const auto &target = *std::min_element(opt.begin(), opt.end(), [](auto lhs, auto rhs) {
-            return lhs.first.distance_from_origin < rhs.first.distance_from_origin;
-          });
-          const auto &specular_light = target.second->shape->get_diffuse_light(target.first.intersection_coordinates, inObj, inLight);
-          outFrame[j + i * mSensorRes[0]] = target.second->color.hadamard(specular_light);
+          const auto &diffuse_light = first_intersect->second->shape->get_diffuse_light(first_intersect->first.intersection_coordinates, inObj, inLight);
+          outFrame[j + i * mSensorRes[0]] = first_intersect->second->color.hadamard(diffuse_light);
         }
         opt.clear();
       }
@@ -152,6 +167,6 @@ private:
   Vec3f mDirection;
   float mFocal;
   float mRotation;
-  Vec<2, float> mSensorSize;
-  Vec<2, std::size_t> mSensorRes;
+  Vector<2, float> mSensorSize;
+  Vector<2, std::size_t> mSensorRes;
 };

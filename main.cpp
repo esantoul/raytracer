@@ -6,7 +6,7 @@
 constexpr std::size_t kImgWidth = 1920;
 constexpr std::size_t kImgHeight = 1080;
 
-constexpr Vec<2, float> kSensorSize = 3 * Vec<2, float>{0.0192, 0.0108};
+constexpr Vector<2, float> kSensorSize = 3 * Vector<2, float>{0.0192, 0.0108};
 
 Camera cam{
     {0, 0, 0},
@@ -19,9 +19,9 @@ Camera cam{
 constexpr char filename[] = "scenes/test.ppm";
 
 std::vector<Object> myObjs{
-    {std::make_shared<Sphere>(Vec3f{1.25, 0, 5}, 0.5), {0.5, 0.1, 0.1}},
+    {std::make_shared<Sphere>(Vec3f{1.4, 0, 5}, 0.5), {0.5, 0.1, 0.1}},
     {std::make_shared<Sphere>(Vec3f{0.5, 0.5, 4}, 0.5), {0.1, 0.1, 0.5}},
-    {std::make_shared<Sphere>(Vec3f{-1, -0.8, 4.5}, 0.5), {0.1, 0.5, 0.5}},
+    {std::make_shared<Sphere>(Vec3f{-1, -0.6, 4.5}, 0.5), {0.1, 0.5, 0.5}},
     {std::make_shared<Sphere>(Vec3f{-1, 0.5, 5.5}, 0.5), {0.3, 0.1, 0.5}}};
 
 std::vector<Light> myLights{
@@ -61,6 +61,7 @@ void write_frame_to_file(const char *fname)
 
 int main()
 {
+  std::fill(std::begin(frame), std::end(frame), Vec3f{0.2, 0.2, 0.2});
   cam.render(frame, myObjs, myLights);
 
   write_frame_to_file(filename);
