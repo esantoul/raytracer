@@ -7,11 +7,11 @@
 #include <optional>
 
 template <std::size_t dim, typename Scalar_t>
-class Vec
+class Vector
 {
 public:
   template <typename... Args>
-  constexpr Vec(Args... components) : mComp{static_cast<Scalar_t>(components)...} {}
+  constexpr Vector(Args... components) : mComp{static_cast<Scalar_t>(components)...} {}
 
   constexpr const Scalar_t &operator[](std::size_t index) const
   {
@@ -19,55 +19,62 @@ public:
     return mComp[index];
   }
 
-  constexpr Vec operator+(const Vec &other) const
+  constexpr Vector operator+(const Vector &other) const
   {
-    Vec res{*this};
+    Vector res{*this};
     for (std::size_t i = 0; i < dim; ++i)
       res.mComp[i] += other.mComp[i];
     return res;
   }
 
-  constexpr Vec operator+=(const Vec &other)
+  constexpr Vector operator+=(const Vector &other)
   {
     for (std::size_t i = 0; i < dim; ++i)
       mComp[i] += other.mComp[i];
     return *this;
   }
 
-  constexpr Vec operator-(const Vec &other) const
+  constexpr Vector operator-(const Vector &other) const
   {
-    Vec res{*this};
+    Vector res{*this};
     for (std::size_t i = 0; i < dim; ++i)
       res.mComp[i] -= other.mComp[i];
     return res;
   }
 
-  constexpr Vec operator*(const Scalar_t &factor) const
+  constexpr Vector operator-=(const Vector &other)
   {
-    Vec res{*this};
+    for (std::size_t i = 0; i < dim; ++i)
+      mComp[i] -= other.mComp[i];
+    return *this;
+  }
+
+  constexpr Vector operator*(const Scalar_t &factor) const
+  {
+    Vector res{*this};
     for (auto &el : res.mComp)
       el *= factor;
     return res;
   }
 
-  constexpr Vec operator/(const Scalar_t &factor) const
+  constexpr Vector operator/(const Scalar_t &factor) const
   {
-    Vec res{*this};
+    Vector res{*this};
     for (auto &el : res.mComp)
       el /= factor;
     return res;
   }
 
-  constexpr Vec operator/=(const Scalar_t &factor)
+  constexpr Vector operator/=(const Scalar_t &factor)
   {
     for (auto &el : mComp)
       el /= factor;
     return *this;
   }
 
-  constexpr Vec hadamard(const Vec &other) const
+  constexpr Vector hadamard(const Vector &other) const
   {
-    Vec res{*this};
+    Vector res{*this};
     for (std::size_t i = 0; i < dim; ++i)
       res.mComp[i] *= other.mComp[i];
     return res;
@@ -83,16 +90,16 @@ public:
 
   constexpr Scalar_t norm_inf() const
   {
-    return *std::max_element(mComp, mComp + dim, [](Scalar_t lhs, Scalar_t rhs) { return std::abs(lhs) < std::abs(rhs); });
+    return std::abs(*std::max_element(mComp, mComp + dim, [](Scalar_t lhs, Scalar_t rhs) { return std::abs(lhs) < std::abs(rhs); }));
   }
 
-  constexpr Vec &normalize()
+  constexpr Vector &normalize()
   {
     *this /= this->norm();
     return *this;
   }
 
-  constexpr Scalar_t dot(const Vec &other) const
+  constexpr Scalar_t dot(const Vector &other) const
   {
     Scalar_t s{0};
     for (std::size_t i = 0; i < dim; ++i)
@@ -111,12 +118,12 @@ private:
 };
 
 template <std::size_t dim, typename Scalar_t, typename Factor_t>
-constexpr Vec<dim, Scalar_t> operator*(const Factor_t &f, const Vec<dim, Scalar_t> &vec)
+constexpr Vector<dim, Scalar_t> operator*(const Factor_t &f, const Vector<dim, Scalar_t> &vec)
 {
   return vec * f;
 }
 
-using Vec3f = Vec<3, float>;
+using Vec3f = Vector<3, float>;
 
 // template <typename Scalar_t, std::size_t... dims>
 // class Tensor
