@@ -4,13 +4,48 @@
 
 template <typename Scalar_t, std::size_t dim0, std::size_t... dims>
 class Tensor_ref;
+template <typename Scalar_t, std::size_t dim0, std::size_t... dims>
+class Tensor;
+
+template <typename Source_t, typename Scalar_t>
+class Base_Arithmetics_Helper
+{
+public:
+  Source_t &operator+=(const Scalar_t &val)
+  {
+    return cmpd_assign(val, [](auto &&l, auto &&r) { l += r; });
+  }
+  Source_t &operator-=(const Scalar_t &val)
+  {
+    return cmpd_assign(val, [](auto &&l, auto &&r) { l -= r; });
+  }
+  Source_t &operator*=(const Scalar_t &val)
+  {
+    return cmpd_assign(val, [](auto &&l, auto &&r) { l *= r; });
+  }
+  Source_t &operator/=(const Scalar_t &val)
+  {
+    return cmpd_assign(val, [](auto &&l, auto &&r) { l /= r; });
+  }
+
+private:
+  template <typename Fun_t>
+  Source_t &cmpd_assign(const Scalar_t &val, Fun_t &&fun)
+  {
+    Source_t &reference = static_cast<Source_t &>(*this);
+    for (auto &&el : reference)
+      fun(el, val);
+    return reference;
+  }
+};
 
 template <typename Source_t, typename Scalar_t, std::size_t dim0, std::size_t... dims>
 class TensorBase
+    : public Base_Arithmetics_Helper<Source_t, Scalar_t>
 {
 public:
   using Decayed_t = Tensor_ref<Scalar_t, dims...>;
-  using Const_Decayed_t = const Tensor_ref<const Scalar_t, dims...>;
+  using Const_Decayed_t = Tensor_ref<const Scalar_t, dims...>;
   using Data_t = typename Decayed_t::Data_t[dim0];
 
   class Iterator
@@ -60,6 +95,7 @@ public:
 
 template <typename Source_t, typename Scalar_t, std::size_t dim0>
 class TensorBase<Source_t, Scalar_t, dim0>
+    : public Base_Arithmetics_Helper<Source_t, Scalar_t>
 {
 public:
   using Decayed_t = Scalar_t;
@@ -122,7 +158,7 @@ public:
   using Const_Iterator = typename Base_t::Const_Iterator;
 
   Decayed_t operator[](std::size_t idx) { return mStorage[idx]; }
-  typename Base_t::Const_Decayed_t operator[](std::size_t idx) const { return mStorage[idx]; }
+  const Decayed_t operator[](std::size_t idx) const { return mStorage[idx]; }
   operator Tensor_ref<Scalar_t, dim0, dims...>() { return {mStorage}; }
   operator Tensor_ref<const Scalar_t, dim0, dims...>() const { return {mStorage}; }
   Iterator begin() { return {this, 0}; }
