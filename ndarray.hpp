@@ -50,9 +50,9 @@ public:
   }
 
   constexpr Subscript_t *begin() { return mData; }
-  constexpr Subscript_t *end() { return mData + get_first_v<dims...>; }
+  constexpr Subscript_t *end() { return mData + utils::get_first_v<dims...>; }
   constexpr const Subscript_t *begin() const { return mData; }
-  constexpr const Subscript_t *end() const { return mData + get_first_v<dims...>; }
+  constexpr const Subscript_t *end() const { return mData + utils::get_first_v<dims...>; }
 
   constexpr std::size_t dimentions() const { return sizeof...(dims); }
 
