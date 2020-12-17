@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "base_arithmetics_helper.hpp"
 #include "utils.hpp"
+
 template <typename Scalar_t, std::size_t... dims>
 class NdArray;
 template <typename Scalar_t, std::size_t dim0, std::size_t... dims>
@@ -37,10 +38,22 @@ public:
   constexpr NdArray(const Raw_t &data) { std::copy(std::begin(data), std::end(data), mData); }
   constexpr Subscript_t &operator[](std::size_t idx) { return mData[idx]; }
 
-  Subscript_t *begin() { return mData; }
-  Subscript_t *end() { return mData + utils::get_first_v<dims...>; }
-  const Subscript_t *begin() const { return mData; }
-  const Subscript_t *end() const { return mData + utils::get_first_v<dims...>; }
+  template <typename Other_Scalar_t>
+  constexpr operator NdArray<Other_Scalar_t, dims...>()
+  {
+    NdArray<Other_Scalar_t, dims...> ret{};
+    auto start = begin();
+    for (auto &el : ret)
+      el = *(start++);
+    return ret;
+  }
+
+  constexpr Subscript_t *begin() { return mData; }
+  constexpr Subscript_t *end() { return mData + get_first_v<dims...>; }
+  constexpr const Subscript_t *begin() const { return mData; }
+  constexpr const Subscript_t *end() const { return mData + get_first_v<dims...>; }
+
+  constexpr std::size_t dimentions() const { return sizeof...(dims); }
 
 private:
   Data_t mData;
