@@ -37,6 +37,7 @@ public:
   constexpr NdArray() : mData{} {}
   constexpr NdArray(const Raw_t &data) { std::copy(std::begin(data), std::end(data), mData); }
   constexpr Subscript_t &operator[](std::size_t idx) { return mData[idx]; }
+  constexpr const Subscript_t &operator[](std::size_t idx) const { return mData[idx]; }
 
   template <typename Other_Scalar_t>
   constexpr operator NdArray<Other_Scalar_t, dims...>()
