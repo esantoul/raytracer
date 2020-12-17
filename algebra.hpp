@@ -1,135 +1,61 @@
 #pragma once
 
-#include <cmath>
-#include <numeric>
-#include <cassert>
+#include <cstddef>
 #include <algorithm>
-#include <optional>
+#include "ndarray_arithmetics.hpp"
+#include "utils.hpp"
 
-template <std::size_t dim, typename Scalar_t>
-class Vector
+template <typename Scalar_t, std::size_t... dims>
+class NdArray;
+template <typename Scalar_t, std::size_t dim0, std::size_t... dims>
+class NdArray_Types_Helper
 {
 public:
-  template <typename... Args>
-  constexpr Vector(Args... components) : mComp{static_cast<Scalar_t>(components)...} {}
-
-  constexpr const Scalar_t &operator[](std::size_t index) const
-  {
-    assert("Out of bound access" && index < dim);
-    return mComp[index];
-  }
-
-  constexpr Vector operator+(const Vector &other) const
-  {
-    Vector res{*this};
-    for (std::size_t i = 0; i < dim; ++i)
-      res.mComp[i] += other.mComp[i];
-    return res;
-  }
-
-  constexpr Vector operator+=(const Vector &other)
-  {
-    for (std::size_t i = 0; i < dim; ++i)
-      mComp[i] += other.mComp[i];
-    return *this;
-  }
-
-  constexpr Vector operator-(const Vector &other) const
-  {
-    Vector res{*this};
-    for (std::size_t i = 0; i < dim; ++i)
-      res.mComp[i] -= other.mComp[i];
-    return res;
-  }
-
-  constexpr Vector operator-=(const Vector &other)
-  {
-    for (std::size_t i = 0; i < dim; ++i)
-      mComp[i] -= other.mComp[i];
-    return *this;
-  }
-
-  constexpr Vector operator*(const Scalar_t &factor) const
-  {
-    Vector res{*this};
-    for (auto &el : res.mComp)
-      el *= factor;
-    return res;
-  }
-
-  constexpr Vector operator/(const Scalar_t &factor) const
-  {
-    Vector res{*this};
-    for (auto &el : res.mComp)
-      el /= factor;
-    return res;
-  }
-
-  constexpr Vector operator/=(const Scalar_t &factor)
-  {
-    for (auto &el : mComp)
-      el /= factor;
-    return *this;
-  }
-
-  constexpr Vector hadamard(const Vector &other) const
-  {
-    Vector res{*this};
-    for (std::size_t i = 0; i < dim; ++i)
-      res.mComp[i] *= other.mComp[i];
-    return res;
-  }
-
-  constexpr Scalar_t *begin() { return mComp; }
-  constexpr Scalar_t *end() { return mComp + dim; }
-
-  constexpr Scalar_t norm() const
-  {
-    return norm<2>();
-  }
-
-  constexpr Scalar_t norm_inf() const
-  {
-    return std::abs(*std::max_element(mComp, mComp + dim, [](Scalar_t lhs, Scalar_t rhs) { return std::abs(lhs) < std::abs(rhs); }));
-  }
-
-  constexpr Vector &normalize()
-  {
-    *this /= this->norm();
-    return *this;
-  }
-
-  constexpr Scalar_t dot(const Vector &other) const
-  {
-    Scalar_t s{0};
-    for (std::size_t i = 0; i < dim; ++i)
-      s += mComp[i] * other.mComp[i];
-    return s;
-  }
-
-private:
-  template <std::size_t n>
-  constexpr Scalar_t norm() const
-  {
-    return std::pow(std::accumulate(mComp, mComp + dim, 0.0, [](Scalar_t ps, Scalar_t el) { return ps + std::pow(std::abs(el), n); }), 1 / static_cast<double>(n));
-  }
-
-  Scalar_t mComp[dim]{};
+  using Raw_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Raw_t[dim0];
+  using Subscript_t = NdArray<Scalar_t, dims...>;
+  using Data_t = Subscript_t[dim0];
 };
 
-template <std::size_t dim, typename Scalar_t, typename Factor_t>
-constexpr Vector<dim, Scalar_t> operator*(const Factor_t &f, const Vector<dim, Scalar_t> &vec)
+template <typename Scalar_t, std::size_t dim0>
+class NdArray_Types_Helper<Scalar_t, dim0>
 {
-  return vec * f;
-}
+public:
+  using Raw_t = Scalar_t[dim0];
+  using Subscript_t = Scalar_t;
+  using Data_t = Subscript_t[dim0];
+};
 
-using Vec3f = Vector<3, float>;
+template <typename Scalar_t, std::size_t... dims>
+class NdArray
+    : public NdArray_Arithmetics<NdArray<Scalar_t, dims...>, Scalar_t>
+{
+public:
+  using Raw_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Raw_t;
+  using Data_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Data_t;
+  using Subscript_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Subscript_t;
 
-// template <typename Scalar_t, std::size_t... dims>
-// class Tensor
-// {
-// public:
-//   Tensor<Scalar_t,
-// private:
-//   Scalar_t mComp[(dims * ...)]{};
-// };
+  constexpr NdArray() : mData{} {}
+  constexpr NdArray(const Raw_t &data) { std::copy(std::begin(data), std::end(data), mData); }
+  constexpr Subscript_t &operator[](std::size_t idx) { return mData[idx]; }
+  constexpr const Subscript_t &operator[](std::size_t idx) const { return mData[idx]; }
+
+  template <typename Other_Scalar_t>
+  constexpr operator NdArray<Other_Scalar_t, dims...>()
+  {
+    NdArray<Other_Scalar_t, dims...> ret{};
+    auto start = begin();
+    for (auto &el : ret)
+      el = *(start++);
+    return ret;
+  }
+
+  constexpr Subscript_t *begin() { return mData; }
+  constexpr Subscript_t *end() { return mData + utils::get_first_v<dims...>; }
+  constexpr const Subscript_t *begin() const { return mData; }
+  constexpr const Subscript_t *end() const { return mData + utils::get_first_v<dims...>; }
+
+  constexpr std::size_t dimentions() const { return sizeof...(dims); }
+
+private:
+  Data_t mData;
+};

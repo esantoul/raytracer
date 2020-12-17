@@ -1,6 +1,6 @@
 #pragma once
 
-#include "algebra.hpp"
+#include "algebra_old.hpp"
 #include <cstdio>
 #include <vector>
 #include <utility>
@@ -131,7 +131,7 @@ public:
   constexpr Camera(const Vec3f &position,
                    const Vec3f &direction,
                    const float &focal_length,
-                   const float &rotation,
+                   const Vec3f &rotation,
                    const Vector<2, float> &sensor_size,
                    const Vector<2, std::size_t> &sensor_resolution)
       : mPosition{position},
@@ -166,7 +166,7 @@ private:
   Vec3f mPosition;
   Vec3f mDirection;
   float mFocal;
-  float mRotation;
+  Vec3f mRotation;
   Vector<2, float> mSensorSize;
   Vector<2, std::size_t> mSensorRes;
 };

@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstring>
-#include "algebra.hpp"
+#include "algebra_old.hpp"
 #include "raytracing.hpp"
 
 constexpr std::size_t kImgWidth = 1920;
@@ -12,7 +12,7 @@ Camera cam{
     {0, 0, 0},
     {0, 0, 1},
     .055, // 55mm focal length
-    0.f,
+    {0, 0, 0},
     kSensorSize,
     {kImgWidth, kImgHeight}};
 
