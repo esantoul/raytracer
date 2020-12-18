@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cstddef>
 
 template <typename Scalar_t, std::size_t lines>

@@ -1,5 +1,6 @@
 #pragma once
 #include "ndarray.hpp"
+#include "vector.hpp"
 
 template <typename Scalar_t, std::size_t lines, std::size_t columns>
 class Matrix

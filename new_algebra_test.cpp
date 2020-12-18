@@ -1,6 +1,5 @@
 #include "ndarray.hpp"
 #include "matrix.hpp"
-#include "vector.hpp"
 
 constexpr float arr[2][2] = {{4.9, 2}, {3.4, 11}};
 
