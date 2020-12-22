@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <utility>
+#include <algorithm>
 
 #include "ndarray_arithmetics.hpp"
 #include "ndarray_types_helper.hpp"
@@ -13,15 +14,20 @@ class NdArray
       public NdArray_Cast_Helper<Scalar_t, dims...>
 {
 public:
-  using Raw_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Raw_t;
+  using Raw_Subscript_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Raw_Subscript_t;
   using Data_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Data_t;
   using Subscript_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Subscript_t;
 
   constexpr NdArray() : mData{} {}
-  constexpr NdArray(const Raw_t &data)
-      : NdArray(data, std::make_index_sequence<utils::get_first_v<dims...>>())
+
+  template <std::size_t N>
+  constexpr NdArray(const Raw_Subscript_t (&data)[N])
+      : NdArray(data, std::make_index_sequence<std::min(utils::get_first_v<dims...>, N)>())
   {
   }
+
+  template <typename... Args>
+  constexpr NdArray(const Args &... args) : mData{args...} {}
 
   constexpr Subscript_t &operator[](std::size_t idx) { return mData[idx]; }
   constexpr const Subscript_t &operator[](std::size_t idx) const { return mData[idx]; }
@@ -44,8 +50,8 @@ public:
   constexpr std::size_t dimentions() const { return sizeof...(dims); }
 
 private:
-  template <std::size_t... rng>
-  constexpr NdArray(const Raw_t &data,
+  template <std::size_t N, std::size_t... rng>
+  constexpr NdArray(const Raw_Subscript_t (&data)[N],
                     const std::index_sequence<rng...> &)
       : mData{data[rng]...}
   {
