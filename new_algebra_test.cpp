@@ -1,5 +1,6 @@
-#include "ndarray.hpp"
-#include "matrix.hpp"
+#include "Constor/constor.hpp"
+
+using namespace Constor;
 
 constexpr float arr[2][2] = {{4.9, 2}, {3.4, 11}};
 
@@ -46,8 +47,9 @@ template <typename T, std::size_t lines>
 void prt_vec(const NdArray<T, lines> &vec)
 {
   for (auto &val : vec)
-    std::cout << val << "\n";
-  std::cout << std::endl;
+    std::cout << val << "\t";
+  std::cout << '\n'
+            << std::endl;
 }
 //*/
 
@@ -57,6 +59,7 @@ int main()
   (void)ndaT;
   (void)mat2;
   (void)vec_mul;
+  prt_vec(mm);
   prt_mat(vec_mul);
   Matrix<float, 2, 2> m;
   m[0] = (ndaT.transpose() * Identity<float, 2>())[0];
