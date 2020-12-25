@@ -4,21 +4,34 @@
 
 namespace Constor
 {
-  template <typename Scalar_t, std::size_t lines>
+  template <typename Scalar_t, std::size_t length>
   class Vector
-      : public NdArray<Scalar_t, lines>
+      : public NdArray<Scalar_t, length>
   {
   public:
-    using NdArray<Scalar_t, lines>::NdArray;
+    using NdArray<Scalar_t, length>::NdArray;
+    using Base_t = NdArray<Scalar_t, length>;
 
-    constexpr Vector(const NdArray<Scalar_t, lines> &nda) : NdArray<Scalar_t, lines>{nda} {}
+    constexpr Vector(const Base_t &nda) : Base_t{nda} {}
 
-    constexpr Vector operator*=(const Vector &other) = delete;
-    constexpr Vector operator/=(const Vector &other) = delete;
-    constexpr Vector operator/(const Vector &other) const = delete;
+    constexpr Vector &operator+=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator+=(val)); }
+    constexpr Vector &operator-=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator-=(val)); }
+    constexpr Vector &operator*=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator*=(val)); }
+    constexpr Vector &operator/=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator/=(val)); }
+    constexpr Vector operator+(const Scalar_t &val) const { return Vector{*this} += val; }
+    constexpr Vector operator-(const Scalar_t &val) const { return Vector{*this} -= val; }
+    constexpr Vector operator*(const Scalar_t &val) const { return Vector{*this} *= val; }
+    constexpr Vector operator/(const Scalar_t &val) const { return Vector{*this} /= val; }
+
+    constexpr Vector &operator+=(const Vector &other) { return static_cast<Vector &>(Base_t::operator+=(static_cast<const Base_t &>(other))); }
+    constexpr Vector &operator-=(const Vector &other) { return static_cast<Vector &>(Base_t::operator-=(static_cast<const Base_t &>(other))); }
+    constexpr Vector operator+(const Vector &other) const { return Vector{*this} += other; };
+    constexpr Vector operator-(const Vector &other) const { return Vector{*this} -= other; };
+
+    constexpr Vector operator-() const { return *this * -1; }
 
     template <std::size_t other_ncolumns>
-    constexpr Matrix<Scalar_t, 1, other_ncolumns> operator*(const Matrix<Scalar_t, lines, other_ncolumns> &other) const
+    constexpr Matrix<Scalar_t, 1, other_ncolumns> operator*(const Matrix<Scalar_t, length, other_ncolumns> &other) const
     {
       return this->to_matrix() * other;
     }
@@ -32,12 +45,28 @@ namespace Constor
       return ret;
     }
 
-    constexpr const NdArray<Scalar_t, lines> &to_ndarray() const { return *this; }
+    constexpr const NdArray<Scalar_t, length> &to_ndarray() const { return *this; }
 
-    constexpr Matrix<Scalar_t, 1, lines> to_matrix() const { return {static_cast<const NdArray<Scalar_t, lines> &>(*this)}; }
+    constexpr Matrix<Scalar_t, 1, length> to_matrix() const { return {static_cast<const Base_t &>(*this)}; }
 
-    constexpr Matrix<Scalar_t, lines, 1> transpose() const { return this->to_matrix().transpose(); }
+    constexpr Matrix<Scalar_t, length, 1> transpose() const { return this->to_matrix().transpose(); }
 
-    constexpr operator Matrix<Scalar_t, lines, 1>() const { return this->to_matrix(); }
+    constexpr operator Matrix<Scalar_t, length, 1>() const { return this->to_matrix(); }
   };
 } // namespace Constor
+
+template <typename Scalar_t, typename Value_t, std::size_t length>
+constexpr Constor::Vector<Scalar_t, length> operator+(const Value_t &val, const Constor::Vector<Scalar_t, length> &vec)
+{
+  return vec + val;
+}
+template <typename Scalar_t, typename Value_t, std::size_t length>
+constexpr Constor::Vector<Scalar_t, length> operator-(const Value_t &val, const Constor::Vector<Scalar_t, length> &vec)
+{
+  return -vec + val;
+}
+template <typename Scalar_t, typename Value_t, std::size_t length>
+constexpr Constor::Vector<Scalar_t, length> operator*(const Value_t &val, const Constor::Vector<Scalar_t, length> &vec)
+{
+  return vec * val;
+}

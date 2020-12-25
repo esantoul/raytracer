@@ -5,15 +5,13 @@
 
 #include "ndarray_arithmetics.hpp"
 #include "ndarray_types_helper.hpp"
-#include "ndarray_cast_helper.hpp"
 #include "utils.hpp"
 
 namespace Constor
 {
   template <typename Scalar_t, std::size_t... dims>
   class NdArray
-      : public NdArray_Arithmetics<NdArray<Scalar_t, dims...>, Scalar_t>,
-        public NdArray_Cast_Helper<Scalar_t, dims...>
+      : public NdArray_Arithmetics<NdArray<Scalar_t, dims...>, Scalar_t, typename NdArray_Types_Helper<Scalar_t, dims...>::Subscript_t>
   {
   public:
     using Raw_Subscript_t = typename NdArray_Types_Helper<Scalar_t, dims...>::Raw_Subscript_t;

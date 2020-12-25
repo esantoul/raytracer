@@ -12,13 +12,13 @@ constexpr Matrix<float, 1, 2> vec_to_mat = vec1.to_matrix();
 
 constexpr auto ndaT = static_cast<Vector<float, 2>>(arr[0]).transpose();
 
-constexpr const Matrix<float, 2, 2> &mat{arr};
+constexpr const Matrix<float, 2, 2> mat{arr};
 
 constexpr Matrix<float, 2, 2> mat2 = mat;
 
-constexpr const Vector<float, 2> &mm{static_cast<const NdArray<float, 2, 2> &>(mat2)[0]};
+constexpr const Vector<float, 2> &mm{mat2[0]};
 
-constexpr auto vec_mul = mat2 * mat2;
+constexpr auto vec_mul = mat2 / 2;
 
 template <typename Scalar_t, std::size_t N>
 constexpr Matrix<float, N, N> Identity()
@@ -47,9 +47,8 @@ template <typename T, std::size_t lines>
 void prt_vec(const NdArray<T, lines> &vec)
 {
   for (auto &val : vec)
-    std::cout << val << "\t";
-  std::cout << '\n'
-            << std::endl;
+    std::cout << val << "\n";
+  std::cout << std::endl;
 }
 //*/
 
@@ -59,9 +58,8 @@ int main()
   (void)ndaT;
   (void)mat2;
   (void)vec_mul;
-  prt_vec(mm);
-  prt_mat(vec_mul);
+  prt_mat(vec_mul.to_ndarray());
   Matrix<float, 2, 2> m;
   m[0] = (ndaT.transpose() * Identity<float, 2>())[0];
-  return static_cast<NdArray<float, 2, 2> &>(m)[0][0];
+  return m[0][0];
 }
