@@ -13,8 +13,14 @@ namespace Constor
     using NdArray<Scalar_t, length>::NdArray;
     using Base_t = NdArray<Scalar_t, length>;
     using Subscript_t = Scalar_t;
+    using Arithmetics_Base = NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Scalar_t>;
 
     constexpr Vector(const Base_t &nda) : Base_t{nda} {}
+
+    using Arithmetics_Base::operator+=;
+    using Arithmetics_Base::operator-=;
+    using Arithmetics_Base::operator+;
+    using Arithmetics_Base::operator-;
 
     constexpr Vector &operator*=(const Scalar_t &val) { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator*=(val); }
     constexpr Vector operator*(const Scalar_t &val) const { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator*(val); }
