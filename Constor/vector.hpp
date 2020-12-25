@@ -6,29 +6,21 @@ namespace Constor
 {
   template <typename Scalar_t, std::size_t length>
   class Vector
-      : public NdArray<Scalar_t, length>
+      : public NdArray<Scalar_t, length>,
+        public NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Scalar_t> // Overrides NdArray's
   {
   public:
     using NdArray<Scalar_t, length>::NdArray;
     using Base_t = NdArray<Scalar_t, length>;
+    using Subscript_t = Scalar_t;
 
     constexpr Vector(const Base_t &nda) : Base_t{nda} {}
 
-    constexpr Vector &operator+=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator+=(val)); }
-    constexpr Vector &operator-=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator-=(val)); }
-    constexpr Vector &operator*=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator*=(val)); }
-    constexpr Vector &operator/=(const Scalar_t &val) { return static_cast<Vector &>(Base_t::operator/=(val)); }
-    constexpr Vector operator+(const Scalar_t &val) const { return Vector{*this} += val; }
-    constexpr Vector operator-(const Scalar_t &val) const { return Vector{*this} -= val; }
-    constexpr Vector operator*(const Scalar_t &val) const { return Vector{*this} *= val; }
-    constexpr Vector operator/(const Scalar_t &val) const { return Vector{*this} /= val; }
+    constexpr Vector &operator*=(const Scalar_t &val) { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator*=(val); }
+    constexpr Vector operator*(const Scalar_t &val) const { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator*(val); }
 
-    constexpr Vector &operator+=(const Vector &other) { return static_cast<Vector &>(Base_t::operator+=(static_cast<const Base_t &>(other))); }
-    constexpr Vector &operator-=(const Vector &other) { return static_cast<Vector &>(Base_t::operator-=(static_cast<const Base_t &>(other))); }
-    constexpr Vector operator+(const Vector &other) const { return Vector{*this} += other; };
-    constexpr Vector operator-(const Vector &other) const { return Vector{*this} -= other; };
-
-    constexpr Vector operator-() const { return *this * -1; }
+    constexpr Vector &operator/=(const Scalar_t &val) { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator/=(val); }
+    constexpr Vector operator/(const Scalar_t &val) const { return NdArray_Arithmetics<Vector<Scalar_t, length>, Scalar_t, Subscript_t>::operator/(val); };
 
     template <std::size_t other_ncolumns>
     constexpr Matrix<Scalar_t, 1, other_ncolumns> operator*(const Matrix<Scalar_t, length, other_ncolumns> &other) const
